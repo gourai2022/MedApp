@@ -90,7 +90,7 @@ def create_app(test_config=None):
           "city": doctor.city,
           "state": doctor.state,
           "phone": doctor.phone,
-          "appo_location": doctor.appo_location,
+          #"appo_location": doctor.appo_location,
           "facebook_link": doctor.facebook_link,
           "twiter_link": doctor.twiter_link,
           "linkedin_link": doctor.linkedin_link,
