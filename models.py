@@ -7,7 +7,7 @@ from flask import Flask
 from flask_migrate import Migrate
 
 database_name = "medapp"
-database_path = 'database'
+database_path = 'postgres://medapp_user:2pljZnIaf1VAJO4gR0UjS7nqlKtbBlJO@dpg-cgmfsvbhp8ua8vpqebqg-a/medapp'
 
 app = Flask(__name__)
 db = SQLAlchemy(app)
