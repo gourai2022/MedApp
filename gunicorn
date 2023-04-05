@@ -1,1 +1,1 @@
-web: gunicorn 'Medapp:create_app()'
+web: gunicorn app:app
