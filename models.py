@@ -1,22 +1,19 @@
 import os
 from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
+from config import SQLALCHEMY_DATABASE_URI
 import json
 from flask_wtf.csrf import CSRFProtect
 from flask import Flask
 from flask_migrate import Migrate
 
-database_name = "postgres_deployment_medapp"
-#database_path = 'postgres://postgres_deployment_medapp_user:EhRLLkptvFgJPnNmW6ezO9CoDGlkQZOw@dpg-cgmqgbrhp8ua8vs49q30-a/postgres_deployment_medapp'
-database_path = "postgres:///{}".format(database_name)
-database_path = os.environ['DATABASE_URL']
 db = SQLAlchemy()
 app = Flask(__name__)
 db = SQLAlchemy(app)
 
-def setup_db(app, database_path=database_path):
+def setup_db(app):
     app.config.from_object('config')
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_path
+    app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
