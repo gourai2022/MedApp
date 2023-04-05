@@ -19,6 +19,6 @@ if database_path.startswith("postgres://"):
 
 # Connect to the database
 SQLALCHEMY_DATABASE_URI = database_path
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_TRACK_MODIFICATIONS = True
 #secret_key = 'super secret key'
 engine = create_engine(SQLALCHEMY_DATABASE_URI, pool_size=10, max_overflow=20)
