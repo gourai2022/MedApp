@@ -1,4 +1,5 @@
 import os
+import psycopg2
 from sqlalchemy import create_engine
 SECRET_KEY = os.urandom(32)
 # Grabs the folder where the script runs.
