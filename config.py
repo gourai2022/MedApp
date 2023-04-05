@@ -13,6 +13,10 @@ database_name = "postgres_deployment_medapp"
 database_path = "postgresql:///{}".format(database_name)
 database_path = os.environ['DATABASE_URL']
 
+#database_path = os.getenv("DATABASE_URL")
+if database_path.startswith("postgres://"):
+    database_path = database_path.replace("postgres://", "postgresql://", 1)
+
 # Connect to the database
 SQLALCHEMY_DATABASE_URI = database_path
 SQLALCHEMY_TRACK_MODIFICATIONS = False
