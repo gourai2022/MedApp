@@ -1,10 +1,10 @@
 import os
 import unittest
 import json
+from flask import request
 from flask_sqlalchemy import SQLAlchemy
-
-from app import create_app
-from models import *
+from flaskr import create_app
+from models import setup_db, Appointment, Doctor, Patient
 from forms import *
 
 ##########This class represents the Medapp test case##########
@@ -18,13 +18,25 @@ class MedappTestCase(unittest.TestCase):
         #self.database_path = "postgresql://{}/{}".format('gourikulkarni', 'Kumar18!', 'localhost:5432', self.database_name)
         #setup_db(self.app, self.database_path)
 
-        
-##########Binds the app to the current context
+        #Binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
+
+        # Set up authentication tokens info
+        with open('auth_config.json', 'r') as f:
+            self.auth = json.loads(f.read())
+
+        admin_jwt = self.auth["roles"]["admin"]["jwt_token"]
+        doctor_jwt = self.auth["roles"]["doctor"]["jwt_token"]
+        patient_jwt = self.auth["roles"]["patient"]["jwt_token"]
+        self.auth_headers = {
+            "admin": f'Bearer {admin_jwt}',
+            "doctor": f'Bearer {doctor_jwt}',
+            "patient": f'Bearer {patient_jwt}'
+        }   
     
 ##########Executed after reach test#######    
     def tearDown(self):
@@ -33,137 +45,298 @@ class MedappTestCase(unittest.TestCase):
 ###########Tests for doctors successful operation and for expected errors.
   
     def test_get_doctors(self):
-        response = self.app.get('/doctors')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/doctors', headers=headers)
+        response = self.app.get('/doctors', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['doctors']), type([]))
         self.assertTrue(response.is_json())
         self.assertTrue(len(response.get_json()) > 0)
-        
 
     def test_create_doctor_success(self):
-        # simulate a GET request to the form for creating a new doctor
-        response = self.app.get('/doctors/create')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/doctors', headers=headers)
+        response = self.app.get('/doctors/create', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['doctors']), type([]))
         
     def test_create_doctor_error(self):
-        # simulate a POST request to create a new doctor without providing the required data
-        response = self.app.post('/doctors/create')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/doctors', headers=headers)
+        response = self.app.get('/doctors/create', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b'missing data', response.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Bad request")
 
     def test_get_doctor_edit_page_success(self):
-        response = self.app.get(f'/doctors/{self.test_doctor_id}/edit')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            doctor_id = 2
+            doctor_name = "Andy"
+            response = request.patch(f'/doctors/{doctor_id}/edit', json={'name': doctor_name}, headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
-        #self.assertIn(f'value="{self.test_doctor_id}"'.encode(), response.data)
+        #self.assertTrue(data['success'])
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['doctors']), type([]))
+        self.assertEqual(data['updated']['title'], doctor_name)
     
     def test_get_doctor_edit_page_error(self):
-        # simulate a GET request to edit a non-existent doctor
-        response = self.app.get('/doctors/99999/edit')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            doctor_id = 99999
+            doctor_name = "Andy Andy"
+            response = request.patch(f'/doctors/{doctor_id}/edit', json={'name': doctor_name}, headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.assertIn(b'not found', response.data)
-        
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Resource not found")
 
     def test_to_delete_doctor(self):
-        response = self.app.delete(f'/doctors/delete/{self.test_doctor_id}')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            doctor_id = 11
+            response = request.patch(f'/doctors/{doctor_id}/', headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
+        self.assertEqual(data['success'], True)
         
 
     def test_doctor_not_found_to_delete(self):
-        response = self.app.get('/doctors/delete/99999')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            doctor_id = 111111111
+            response = request.patch(f'/doctors/{doctor_id}/', headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.assertIn(b'not found', response.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Resource not found")
+
 
 ###########Tests for patient successful operation and for expected errors.
   
     def test_get_patients(self):
-        response = self.app.get('/patients')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/patients', headers=headers)
+        response = self.app.get('/patients', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['patients']), type([]))
         self.assertTrue(response.is_json())
         self.assertTrue(len(response.get_json()) > 0)
         
-
     def test_create_patient_success(self):
-        # simulate a GET request to the form for creating a new patient
-        response = self.app.get('/patients/create')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/patients', headers=headers)
+        response = self.app.get('/patients/create', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['patients']), type([]))
         
     def test_create_patient_error(self):
-        # simulate a POST request to create a new patient without providing the required data
-        response = self.app.post('/patients/create')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/patients', headers=headers)
+        response = self.app.get('/patients/create', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b'missing data', response.data)
-
-    def test_get_patient_edit_page_success(self):
-        response = self.app.get(f'/patients/{self.test_patient_id}/edit')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Bad request")
         
+    def test_get_patient_edit_page_success(self):
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            patient_id = 2
+            patient_name = "Andy"
+            response = request.patch(f'/patients/{patient_id}/edit', json={'name': patient_name}, headers=headers)  
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['patients']), type([]))
+        self.assertEqual(data['updated']['title'], patient_name)    
     
     def test_get_patient_edit_page_error(self):
-        # simulate a GET request to edit a non-existent patient
-        response = self.app.get('/patients/99999/edit')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            patient_id = 1111111111
+            patient_name = "Andy Andy"
+            response = request.patch(f'/patients/{patient_id}/edit', json={'name': patient_name}, headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.assertIn(b'not found', response.data)
-        
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Resource not found")        
 
     def test_to_delete_patient(self):
-        response = self.app.delete(f'/patients/delete/{self.test_patient_id}')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            patient_id = 11
+            response = request.patch(f'/patients/{patient_id}/', headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
-        
+        self.assertEqual(data['success'], True)        
 
     def test_patient_not_found_to_delete(self):
-        response = self.app.get('/patients/delete/99999')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            patient_id = 111111111
+            response = request.patch(f'/patients/{patient_id}/', headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.assertIn(b'not found', response.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Resource not found")
+
 
 ###########Tests for appointment successful operation and for expected errors.
   
     def test_get_appointments(self):
-        response = self.app.get('/appointments')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/appointments', headers=headers)
+        response = self.app.get('/appointments', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['appointments']), type([]))
         self.assertTrue(response.is_json())
         self.assertTrue(len(response.get_json()) > 0)
         
-
     def test_create_appointment_success(self):
-        # simulate a GET request to the form for creating a new appointment
-        response = self.app.get('/appointments/create')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/appointments', headers=headers)
+        response = self.app.get('/appointments/create', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['appointments']), type([]))
         
     def test_create_appointment_error(self):
-        # simulate a POST request to create a new appointment without providing the required data
-        response = self.app.post('/appointments/create')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            response = request.get(f'{self.base_url}/appointments', headers=headers)
+        response = self.app.get('/appointments/create', headers=headers)
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b'missing data', response.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Bad request")
 
     def test_get_appointment_edit_page_success(self):
-        response = self.app.get(f'/appointments/{self.test_appointment_id}/edit')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            appointment_id = 2
+            appointment_day = "2023-05-15"
+            response = request.patch(f'/appointments/{appointment_id}/edit', json={'appo_day': appointment_day}, headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
-        
+        self.assertEqual(data['success'], True)
+        self.assertEqual(type(data['appointments']), type([]))
+        self.assertEqual(data['updated']['title'], appointment_day)        
     
     def test_get_appointment_edit_page_error(self):
-        # simulate a GET request to edit a non-existent appointment
-        response = self.app.get('/appointments/99999/edit')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            appointment_id = 1111111111
+            appointment_day = "2099-05-15"
+            response = request.patch(f'/doctors/{appointment_id}/edit', json={'appo_day': appointment_day}, headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.assertIn(b'not found', response.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Resource not found")
         
-
     def test_to_delete_appointment(self):
-        response = self.app.delete(f'/appointments/delete/{self.test_appointment_id}')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            appointment_id = 11
+            response = request.patch(f'/appointments/{appointment_id}/', headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'success', response.data)
-        
+        self.assertEqual(data['success'], True)   
 
     def test_appointment_not_found_to_delete(self):
-        response = self.app.get('/appointments/delete/99999')
+        headers_list = [
+            {'Authorization': self.auth_headers['admin']},
+            {'Authorization': self.auth_headers['doctor']},
+            {'Authorization': self.auth_headers['patient']}]
+        for headers in headers_list:
+            appointment_id = 111111111
+            response = request.patch(f'/appointments/{appointment_id}/', headers=headers)  
+        data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.assertIn(b'not found', response.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Resource not found")
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
