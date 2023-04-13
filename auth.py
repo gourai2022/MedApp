@@ -5,9 +5,9 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = 'dev-gys4qzsrt6aecaks.us.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'medapp'
+AUTH0_DOMAIN='dev-gys4qzsrt6aecaks.us.auth0.com'
+ALGORITHMS=['RS256']
+API_AUDIENCE='medapp'
 
 ## AuthError Exception
 '''
