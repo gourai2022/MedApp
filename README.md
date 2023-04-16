@@ -2,13 +2,13 @@ MEDAPP
 
 Introduction
 
-Medapp is a medical appointment booking site that facilitates to  booking appointment to specific doctor for specific doctors speciality. This site lets you list new patient and doctors, discover them, and list of all upcoming and past appointments.
+Medapp is a medical appointment booking API that facilitates to  booking appointment to specific doctor for specific doctors speciality. This API lets you list new patient and doctors, discover them.
 
 Here I build the data models to power the API endpoints for the Medapp site by connecting to a PostgreSQL database for storing, querying, and creating information about patient and doctor and appointments on Medapp.
 
 Overview
 
-This is a medical appointment booking app that allows patients to book appointments with doctors. The app has create, display, update, and delete functionality for patients, doctors, and appointments.
+This is a medical appointment booking app that allows patients to book appointments with doctors. The app has create, display, update, and delete functionality for patients, doctors, and appointments in JSONIFY format.
 
 Features —
 Patients can create a new account
@@ -58,30 +58,17 @@ npm install bootstrap@3
 Main Files: Project Structure
 
   ├── README.md
-  ├── app.py *** the main driver of the app. Includes your SQLAlchemy models. "python app.py" to run after installing dependencies
+  ├── __init__.py *** the main driver of the app. Includes your SQLAlchemy models. "python app.py" to run after installing dependencies
   ├── config.py *** Database URLs, CSRF generation, etc
   ├── error.log
-  ├── forms.py *** All forms
   ├── requirements.txt *** The dependencies we need to install with "pip3 install -r requirements.txt"
-  ├── static
-  │   ├── css 
-  │   ├── font
-  │   ├── img
-  │   └── js
-  └── templates
-      ├── errors
-      ├── forms
-      ├── layouts
-      └── pages
-  ```
-
-Overall
-
-* Models are located in the `MODELS` section of `app.py`.
-* Controllers are also located in `app.py`.
-* The web frontend is located in `templates/`, which builds static assets deployed to the web server at `static/`.
-* Web forms for creating data are located in `form.py`
-
+  ├── manage.py
+  ├── models.py 
+  ├── test_app.py
+  ├── setup.sh
+  ├── auth.py
+  └── medapp_auth.json
+      
 
 API Documentation
 
@@ -120,3 +107,11 @@ PATCH - /doctor/edit
 DELETE - /doctor/delete  #### Disabled for user restiction 
          /patient/delete #### Disabled for user restiction
          /appointment/delete       
+
+
+To run the tests, run
+
+dropdb medapp_test
+createdb medapp_test
+psql medapp_test < medapp.psql
+python3 test_app.py

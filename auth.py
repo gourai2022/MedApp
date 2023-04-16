@@ -1,13 +1,17 @@
+import os
 import json
 from flask import request, _request_ctx_stack
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
+AUTH0_DOMAIN = os.environ['AUTH0_DOMAIN']
+ALGORITHMS = [os.environ['ALGORITHMS']]
+API_AUDIENCE = os.environ['API_AUDIENCE']
 
-AUTH0_DOMAIN='dev-gys4qzsrt6aecaks.us.auth0.com'
-ALGORITHMS=['RS256']
-API_AUDIENCE='medapp'
+#AUTH0_DOMAIN='dev-gys4qzsrt6aecaks.us.auth0.com'
+#ALGORITHMS=['RS256']
+#API_AUDIENCE='medapp'
 
 ## AuthError Exception
 '''
@@ -143,19 +147,10 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            try:
-                token = get_token_auth_header()
-                payload = verify_decode_jwt(token)
-                check_permissions(permission, payload)
-                return f(payload, *args, **kwargs)
-                
-            except:
-                raise AuthError({
-                    'code': 'invalid_claims',
-                    'description': 'Incorrect claims'
-                })
-                    
+            token = get_token_auth_header()
+            payload = verify_decode_jwt(token)
+            check_permissions(permission, payload)
+            return f(payload, *args, **kwargs)          
         return wrapper       
-        
     return requires_auth_decorator
 

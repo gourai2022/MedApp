@@ -8,27 +8,20 @@ from flask_wtf.csrf import CSRFProtect
 from flask import Flask
 from flask_migrate import Migrate
 
-database_name = "medapp"
-# database_path = "postgres://{}/{}".format('localhost:5432', database_name)
-database_path = "postgres:///{}".format(database_name)
-#database_path = os.environ['DATABASE_URL']
+database_name = "medapp_test"
+#database_path = 'postgresql://postgres_deployment_medapp_user:EhRLLkptvFgJPnNmW6ezO9CoDGlkQZOw@dpg-cgmqgbrhp8ua8vs49q30-a/postgres_deployment_medapp'
+database_path = "postgresql:///{}".format(database_name)
+database_path = os.environ['DATABASE_URL']
 db = SQLAlchemy()
-#app = Flask(__name__)
-#db = SQLAlchemy(app)
+
 
 def setup_db(app):
-    app.config.from_object('config')
     app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
     migration = Migrate(app, db)
-    db.create_all()
-    csrf = CSRFProtect(app)
-    app.secret_key = 'super secret key'
-    app.config['SESSION_TYPE'] = 'filesystem'
     
-
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
@@ -104,7 +97,6 @@ class Doctor(db.Model):
             'address': self.address,
             'city': self.city,
             'state': self.state,
-            'name': self.appo_day,
             'phone': self.phone,
             'facebook_link': self.facebook_link,
             'twiter_link': self.twiter_link,
@@ -123,10 +115,10 @@ class Patient(db.Model):
     state = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120), nullable=False)
     date_of_birth = db.Column(db.String(120), nullable=False)
-    health_insurance_provider = db.Column(db.String(120))
-    health_insurance_id = db.Column(db.String(120))
+    health_insurance_provider = db.Column(db.String(120), nullable=False)
+    health_insurance_id = db.Column(db.String(120), nullable=False)
     seeking_specialities = db.Column(db.String(120),nullable=False)
-    concern_description = db.Column(db.String(150),nullable=False)
+    concern_description = db.Column(db.String(150))
     upcoming_appo = db.Column(db.Integer, default=0)
     past_appo = db.Column(db.Integer, default=0)
     patient = db.relationship('Appointment', backref='patient_appo_id', lazy=True) 
@@ -156,7 +148,6 @@ class Patient(db.Model):
             'address': self.address,
             'city': self.city,
             'state': self.state,
-            'name': self.appo_day,
             'phone': self.phone,
             'date_of_birth': self.date_of_birth,
             'health_insurance_provider': self.health_insurance_provider,
