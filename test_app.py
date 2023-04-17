@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 import requests
 from __init__ import create_app
 from models import setup_db, Appointment, Doctor, Patient
-from forms import *
+
 
 ##########This class represents the Medapp test case##########
 class MedappTestCase(unittest.TestCase):
@@ -170,12 +170,12 @@ class MedappTestCase(unittest.TestCase):
 
         admin_jwt = self.auth["roles"]["admin"]["jwtToken"]
         doctor_jwt = self.auth["roles"]["doctor"]["jwtToken"]
-        patient_jwt = self.auth["roles"]["patient"]["jwtToken"]
+        #patient_jwt = self.auth["roles"]["patient"]["jwtToken"]
         
         self.auth_headers = {
             "admin": f"Bearer {admin_jwt}",
-            "doctor": f"Bearer {doctor_jwt}",
-            "patient": f"Bearer {patient_jwt}"
+            "doctor": f"Bearer {doctor_jwt}"
+            #"patient": f"Bearer {patient_jwt}"
         } 
     
 ##########Executed after reach test#######    
@@ -185,33 +185,33 @@ class MedappTestCase(unittest.TestCase):
 ###########Tests for doctors successful operation and for expected errors.
     
     def test_get_doctors(self):
-        
-        response = self.client().get('/doctors')
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().get('/doctors', headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(True, 'success')
     
     def test_create_doctor_success(self):
-        #headers = {"Authorization": self.auth_headers["admin"]}
-        response = self.client().post('/doctors/create', json=self.new_doctor)
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().post('/doctors/create', json=self.new_doctor, headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(True, 'success')
         #self.assertEqual(type(data['doctors']), type([]))
       
     def test_create_doctor_error(self):
-       
-        response = self.client().post('/doctors/create', json=self.new_doctor_fail)
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().post('/doctors/create', json=self.new_doctor_fail, headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], "bad request")
      
     def test_get_doctor_edit_page_success(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         doctor_id = 1
         #doctor_name = "Dr. John Smith"
-        response = self.client().patch(f'/doctors/{doctor_id}', json=self.update_doctor) 
+        response = self.client().patch(f'/doctors/{doctor_id}', json=self.update_doctor, headers=headers) 
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['success'], True)
@@ -219,10 +219,10 @@ class MedappTestCase(unittest.TestCase):
         #self.assertEqual(data['updated']['name'], doctor_name)
     
     def test_get_doctor_edit_page_error(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         doctor_id = 1
         # doctor_name = "Andy Andy"
-        response = self.client().patch(f'/doctors/{doctor_id}', json=self.update_doctor_fail) 
+        response = self.client().patch(f'/doctors/{doctor_id}', json=self.update_doctor_fail, headers=headers) 
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(data['success'], False)
@@ -256,32 +256,32 @@ class MedappTestCase(unittest.TestCase):
     
     def test_get_patients(self):
         headers= {'Authorization': self.auth_headers['admin']}
-        response = self.client().get('/patients')
+        response = self.client().get('/patients', headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(True, 'success')
         
     def test_create_patient_success(self):
-        
-        response = self.client().post('/patients/create', json=self.new_patient)
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().post('/patients/create', json=self.new_patient, headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(True, 'success')
         #self.assertEqual(type(data['patients']), type([]))
         
     def test_create_patient_error(self):
-        #headers = {"Authorization": self.auth_headers["admin"]}
-        response = self.client().post('/patients/create', json=self.new_patient_fail)
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().post('/patients/create', json=self.new_patient_fail, headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], "bad request")
        
     def test_get_patient_edit_page_success(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         patient_id = 2
         #patient_name = "Mike Doe"
-        response = self.client().patch(f'/patients/{patient_id}', json=self.update_patient)  
+        response = self.client().patch(f'/patients/{patient_id}', json=self.update_patient, headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['success'], True)
@@ -289,10 +289,10 @@ class MedappTestCase(unittest.TestCase):
         #self.assertEqual(data['updated']['name'], patient_name)    
     
     def test_get_patient_edit_page_error(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         patient_id = 1
         #patient_name = "Andy Andy"
-        response = self.client().patch(f'/patients/{patient_id}', json=self.update_patient_fail)  
+        response = self.client().patch(f'/patients/{patient_id}', json=self.update_patient_fail, headers=headers)  
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(data['success'], False)
@@ -325,33 +325,33 @@ class MedappTestCase(unittest.TestCase):
 ###########Tests for appointment successful operation and for expected errors.
     
     def test_get_appointments(self):
-        
-        response = self.client().get('/appointments')
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().get('/appointments', headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['success'], True)
         
     def test_create_appointment_success(self):
-        
-        response = self.client().post('/appointments/create', json=self.new_appointment)
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().post('/appointments/create', json=self.new_appointment, headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         #self.assertEqual(data['success'], True)
         self.assertTrue(True, 'success')
         
     def test_create_appointment_error(self):
-        
-        response = self.client().post('/appointments/create', json=self.new_appointment_fail)
+        headers = {"Authorization": self.auth_headers["admin"]}
+        response = self.client().post('/appointments/create', json=self.new_appointment_fail, headers=headers)
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(data['success'], False)
         #self.assertEqual(data['message'], "bad request")
      
     def test_get_appointment_edit_page_success(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         appointment_id = 2
         #appointment_day = "2023-04-15"
-        response = self.client().patch(f'/appointments/{appointment_id}', json=self.update_appointment)
+        response = self.client().patch(f'/appointments/{appointment_id}', json=self.update_appointment, headers=headers)
         data = json.loads(response.data)
         #print(response.data)
         self.assertEqual(response.status_code, 200)
@@ -360,27 +360,27 @@ class MedappTestCase(unittest.TestCase):
         #self.assertEqual(data['updated']['appointment_day'], appointment_day)        
     
     def test_get_appointment_edit_page_error(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         appointment_id = 1
         #appointment_day = "2099-05-15"
-        response = self.client().patch(f'/appointments/{appointment_id}', json=self.update_appointment_fail)  
+        response = self.client().patch(f'/appointments/{appointment_id}', json=self.update_appointment_fail, headers=headers) 
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], "not found")
     
     def test_to_delete_appointment(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         appointment_id = 1
-        response = self.client().delete(f'/appointments/delete/{appointment_id}')  
+        response = self.client().delete(f'/appointments/delete/{appointment_id}', headers=headers) 
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['success'], True)   
     
     def test_appointment_not_found_to_delete(self):
-        
+        headers = {"Authorization": self.auth_headers["admin"]}
         appointment_id = 111111111
-        response = self.client().delete(f'/appointments/delete/{appointment_id}')  
+        response = self.client().delete(f'/appointments/delete/{appointment_id}', headers=headers) 
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(data['success'], False)

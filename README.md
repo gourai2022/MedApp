@@ -92,22 +92,32 @@ jsonify
 
 Endpoints
 
-GET - /doctor
-      /patient
-      /appointmet
+GET - /doctors
+      /patients
+      /appointmets
 
 POST - /doctor/create
        /patient/create       
        /appointment/create
 
-PATCH - /doctor/edit 
-        /patient/edit
-        /appointment/edit
+PATCH - /doctor/doctor_id 
+        /patient/patient_id
+        /appointment/appointment_id
 
-DELETE - /doctor/delete  #### Disabled for user restiction 
-         /patient/delete #### Disabled for user restiction
-         /appointment/delete       
+DELETE - /doctor/delete/doctor_id  #### Disabled for user restiction 
+         /patient/delete/patient_id #### Disabled for user restiction
+         /appointment/delete/appointment_id       
 
+
+
+Auth0 Setup
+
+You need to setup an Auth0 account.
+Environment variables needed: (setup.sh)
+
+export AUTH0_DOMAIN="---------.auth0.com" # Choose your tenant domain
+export ALGORITHMS="RS256"
+export API_AUDIENCE="MedApp" # Create an API in Auth0
 
 To run the tests, run
 

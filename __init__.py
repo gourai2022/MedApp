@@ -28,8 +28,8 @@ def create_app(test_config=None):
     ## GET DATA #############################################################################################
     
     @app.route("/doctors")
-    #@requires_auth("get:doctors")
-    def doctors():
+    @requires_auth("get:doctors")
+    def doctors(payload):
         doctors = Doctor.query.all()
         if doctors != None:
             for doctor in doctors:
@@ -42,8 +42,8 @@ def create_app(test_config=None):
             abort(404, 'not found')
       
     @app.route("/patients")
-    #@requires_auth("get:patients")
-    def patients():
+    @requires_auth("get:patients")
+    def patients(payload):
         patients = Patient.query.all()
         if patients != None:
             for patient in patients:
@@ -56,8 +56,8 @@ def create_app(test_config=None):
             abort(404, 'not found')
       
     @app.route("/appointments")
-    #@requires_auth("get:appointments")
-    def appointments():
+    @requires_auth("get:appointments")
+    def appointments(payload):
         appointments = Appointment.query.all()
         if patients != None:
             for appointment in appointments:
@@ -73,8 +73,8 @@ def create_app(test_config=None):
     ## RECORD DETAILS #############################################################################################  
 
     @app.route('/doctors/<int:doctor_id>')
-    #@requires_auth("get:doctor_details")
-    def doctor_details(doctor_id):
+    @requires_auth("get:doctor_details")
+    def doctor_details(payload, doctor_id):
         try:
             past_appointment_query = Appointment.query.filter(Appointment.doctor_id == doctor_id, Appointment.appo_day < todat_date).order_by(Appointment.appo_day).all()
             upcoming_appointment_query = Appointment.query.filter(Appointment.doctor_id == doctor_id, Appointment.appo_day > todat_date).order_by(Appointment.appo_day).all()
@@ -102,8 +102,8 @@ def create_app(test_config=None):
             abort(400)      
         
     @app.route('/patients/<int:patient_id>')
-    #@requires_auth("get:patient_details")
-    def patient_details(patient_id):
+    @requires_auth("get:patient_details")
+    def patient_details(payload, patient_id):
         try:
             past_appointment_query = Appointment.query.filter(Appointment.patient_id == patient_id, Appointment.appo_day < todat_date).order_by(Appointment.appo_day).all()
             upcoming_appointment_query = Appointment.query.filter(Appointment.patient_id == patient_id, Appointment.appo_day > todat_date).order_by(Appointment.appo_day).all()
@@ -131,8 +131,8 @@ def create_app(test_config=None):
             abort(400)    
 
     @app.route('/appointments/<int:appointment_id>')
-    #@requires_auth("get:appointment_details")
-    def appointment_details(appointment_id):
+    @requires_auth("get:appointment_details")
+    def appointment_details(payload, appointment_id):
         try:
             appointment = Appointment.query.get(Appointment.id == appointment_id)    
             if appointment != None:
@@ -151,8 +151,8 @@ def create_app(test_config=None):
     ## CREATE RECORD #############################################################################################  
 
     @app.route('/doctors/create', methods=['POST'])
-    #@requires_auth("post:create_doctor")
-    def create_doctor():    
+    @requires_auth("post:create_doctor")
+    def create_doctor(payload):    
         new_doctor = Doctor()
         body = request.get_json()
 
@@ -185,8 +185,8 @@ def create_app(test_config=None):
             abort(400, "bad request")
 
     @app.route('/patients/create', methods=['POST'])
-    #@requires_auth("post:create_patient")
-    def create_patient():    
+    @requires_auth("post:create_patient")
+    def create_patient(payload):    
         new_patient = Patient()
         body = request.get_json()
 
@@ -218,8 +218,8 @@ def create_app(test_config=None):
             abort(400, "bad request")
 
     @app.route('/appointments/create', methods=['POST'])
-    #@requires_auth("post:create_appointment")
-    def create_appointment():
+    @requires_auth("post:create_appointment")
+    def create_appointment(payload):
         new_appointment = Appointment()
         body = request.get_json()
         new_appointment.patient_id = body.get('patient_id')
@@ -261,8 +261,8 @@ def create_app(test_config=None):
     ## UPDATE RECORD #############################################################################################  
 
     @app.route('/doctors/<int:doctor_id>', methods=['PATCH'])
-    #@requires_auth("patch:edit_doctor")
-    def update_doctor(doctor_id):   
+    @requires_auth("patch:edit_doctor")
+    def update_doctor(payload, doctor_id):   
         body = request.get_json()
         update_doctor = Doctor.query.get(doctor_id)
         try:
@@ -293,8 +293,8 @@ def create_app(test_config=None):
             abort(404, "not found")
     
     @app.route('/patients/<int:patient_id>', methods=['PATCH'])
-    #@requires_auth("patch:edit_patient")
-    def update_patient(patient_id):
+    @requires_auth("patch:edit_patient")
+    def update_patient(payload, patient_id):
         body = request.get_json()
         update_patient = Patient.query.get(patient_id)
         try:
@@ -323,8 +323,8 @@ def create_app(test_config=None):
             abort(404, "not found")    
 
     @app.route('/appointments/<int:appointment_id>', methods=['PATCH'])
-    #@requires_auth("patch:edit_appointment")
-    def update_appointment(appointment_id):
+    @requires_auth("patch:edit_appointment")
+    def update_appointment(payload, appointment_id):
         body = request.get_json()
         update_appointment = Appointment.query.get(appointment_id)
         try:
@@ -350,8 +350,8 @@ def create_app(test_config=None):
     ## DELETE RECORD #############################################################################################  
     
     @app.route('/appointments/delete/<int:appointment_id>', methods=['DELETE'])
-    #@requires_auth("delete:appointment")
-    def delete_appointment(appointment_id):
+    @requires_auth("delete:appointment")
+    def delete_appointment(payload, appointment_id):
         delete_appointment = Appointment.query.filter(Appointment.id == appointment_id).first()
         #updated_patient = Patient.query.get(delete_appointment.patient_id)
         #updated_doctor = Doctor.query.get(delete_appointment.doctor_id)
